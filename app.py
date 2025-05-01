@@ -36,9 +36,9 @@ def webhook():
         reply_text = response["choices"][0]["message"]["content"].strip()
         logging.info(f"✅ Reply: {reply_text}")
 
-    except Exception as e:
-        logging.error(f"⚠️ OpenAI error: {e}")
-        reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
+   except Exception as e:
+    logging.exception("❌ OpenAI API call failed:")
+    reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
 
     resp = MessagingResponse()
     resp.message(reply_text)
