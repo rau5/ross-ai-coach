@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Initialize Flask
 app = Flask(__name__)
+print("✅ Flask app instance created")  # ✅ Debug line
 
 # Load environment variables safely
 try:
@@ -21,6 +22,8 @@ except Exception as e:
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
+    print("📨 /webhook route was hit!")  # ✅ Debug line
+
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
 
@@ -35,17 +38,11 @@ def webhook():
             ]
         )
         reply_text = response["choices"][0]["message"]["content"].strip()
-        logging.info(f"✅ Reply: {reply_text}")
-
+        logging.info(f"🧠 Reply: {reply_text}")
     except Exception as e:
-        logging.error(f"🚫 OpenAI error: {e}")
-        reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
+        logging.error(f"⚠️ OpenAI error: {e}")
+        reply_text = "Sorry Ross, I’m taking a nap 😴 Try again soon!"
 
-    # Create Twilio WhatsApp reply
     resp = MessagingResponse()
     resp.message(reply_text)
     return str(resp)
-
-# Commented out for Gunicorn
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=5000)
