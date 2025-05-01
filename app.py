@@ -6,11 +6,11 @@ from twilio.twiml.messaging_response import MessagingResponse
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
+logging.info("✅ Creating Flask app...")
 
 # Initialize Flask
-print("✅ Creating Flask app...")
 app = Flask(__name__)
-print("✅ Flask app instance created")
+logging.info("✅ Flask app instance created")
 
 # Load environment variables safely
 try:
@@ -21,17 +21,10 @@ except Exception as e:
     logging.error(f"❌ OpenAI key error: {e}")
     raise
 
-# Root route for Railway health check
-@app.route("/", methods=["GET"])
-def index():
-    return "AI Coach is running!"
-
-# Webhook for WhatsApp messages
 @app.route("/webhook", methods=["POST"])
 def webhook():
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
-
     logging.info(f"📩 Message from {sender}: {incoming_msg}")
 
     try:
@@ -46,12 +39,10 @@ def webhook():
         logging.info(f"✅ Reply: {reply_text}")
     except Exception as e:
         logging.error(f"❌ OpenAI error: {e}")
-        reply_text = "Sorry Ross, I’m taking a nap 😴 Try again soon!"
+        reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
 
     resp = MessagingResponse()
     resp.message(reply_text)
     return str(resp)
 
-# Optional: for local dev only
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+# NOTE: We intentionally omit `app.run()` here to let gunicorn handle it via the Procfile
