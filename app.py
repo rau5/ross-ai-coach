@@ -1,35 +1,35 @@
 from flask import Flask, request
 import os
-import openai
 import logging
+import openai
 from twilio.twiml.messaging_response import MessagingResponse
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
+logging.info("✅ Creating Flask app...")
 
-# Initialize Flask
-print("✅ Creating Flask app...")
+# Create the Flask app
 app = Flask(__name__)
-print("✅ Flask app instance created")
+logging.info("✅ Flask app instance created")
 
-# Load environment variables safely
+# Load OpenAI API key safely
 try:
     openai.api_key = os.getenv("OPENAI_API_KEY")
     if not openai.api_key:
         raise ValueError("Missing OPENAI_API_KEY")
 except Exception as e:
     logging.error(f"❌ OpenAI key error: {e}")
-    raise
+    openai.api_key = "sk-placeholder"
 
 @app.route("/", methods=["GET"])
-def home():
-    return "AI Coach is running!", 200
+def health_check():
+    return "🏃‍♂️ AI Coach is alive", 200
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
-    logging.info(f"📨 Message from {sender}: {incoming_msg}")
+    logging.info(f"📩 Message from {sender}: {incoming_msg}")
 
     try:
         response = openai.ChatCompletion.create(
@@ -40,10 +40,10 @@ def webhook():
             ]
         )
         reply_text = response["choices"][0]["message"]["content"].strip()
-        logging.info(f"💬 Reply: {reply_text}")
+        logging.info(f"✅ Reply: {reply_text}")
     except Exception as e:
-        logging.error(f"😴 OpenAI error: {e}")
-        reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
+        logging.error(f"❌ OpenAI error: {e}")
+        reply_text = "Sorry Ross, I’m taking a nap 😴 Try again soon!"
 
     resp = MessagingResponse()
     resp.message(reply_text)
