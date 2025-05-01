@@ -20,6 +20,10 @@ except Exception as e:
     logging.error(f"⚠️ OpenAI key error: {e}")
     raise
 
+@app.route("/", methods=["GET"])
+def home():
+    return "Running Coach API is live!", 200
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
     incoming_msg = request.values.get("Body", "").strip()
@@ -41,11 +45,6 @@ def webhook():
         logging.error(f"⚠️ OpenAI error: {e}")
         reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
 
-    # Create Twilio WhatsApp reply
     resp = MessagingResponse()
     resp.message(reply_text)
     return str(resp)
-
-# Uncomment this block only for local testing
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=5000)
