@@ -8,8 +8,9 @@ from twilio.twiml.messaging_response import MessagingResponse
 logging.basicConfig(level=logging.DEBUG)
 
 # Initialize Flask
+print("✅ Creating Flask app...")
 app = Flask(__name__)
-print("✅ Flask app instance created")  # ✅ Debug line
+print("✅ Flask app instance created")
 
 # Load environment variables safely
 try:
@@ -20,13 +21,16 @@ except Exception as e:
     logging.error(f"❌ OpenAI key error: {e}")
     raise
 
+@app.route("/", methods=["GET"])
+def home():
+    return "🏠 Hello from Railway!"
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    print("📨 /webhook route was hit!")  # ✅ Debug line
+    print("📨 /webhook route was hit!")
 
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
-
     logging.info(f"📩 Message from {sender}: {incoming_msg}")
 
     try:
@@ -34,15 +38,17 @@ def webhook():
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are Ross's running coach. Be motivational, friendly, and helpful."},
-                {"role": "user", "content": incoming_msg}
+                {"role": "user", "content": incoming_msg},
             ]
         )
         reply_text = response["choices"][0]["message"]["content"].strip()
-        logging.info(f"🧠 Reply: {reply_text}")
+        logging.info(f"💬 Reply: {reply_text}")
     except Exception as e:
-        logging.error(f"⚠️ OpenAI error: {e}")
+        logging.error(f"❌ OpenAI error: {e}")
         reply_text = "Sorry Ross, I’m taking a nap 😴 Try again soon!"
 
     resp = MessagingResponse()
     resp.message(reply_text)
     return str(resp)
+
+# Gunicorn will handle running the server; do not include app.run()
