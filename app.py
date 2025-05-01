@@ -12,19 +12,17 @@ logging.info("✅ Creating Flask app...")
 app = Flask(__name__)
 logging.info("✅ Flask app instance created")
 
-# Load environment variables safely
-try:
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    if not openai.api_key:
-        raise ValueError("Missing OPENAI_API_KEY")
-except Exception as e:
-    logging.error(f"❌ OpenAI key error: {e}")
-    raise
+# Root route for Railway health check
+@app.route("/", methods=["GET"])
+def home():
+    return "AI Running Coach is live!", 200
 
+# Webhook route for WhatsApp
 @app.route("/webhook", methods=["POST"])
 def webhook():
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
+
     logging.info(f"📩 Message from {sender}: {incoming_msg}")
 
     try:
@@ -37,12 +35,11 @@ def webhook():
         )
         reply_text = response["choices"][0]["message"]["content"].strip()
         logging.info(f"✅ Reply: {reply_text}")
+
     except Exception as e:
-        logging.error(f"❌ OpenAI error: {e}")
+        logging.error(f"⚠️ OpenAI error: {e}")
         reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
 
     resp = MessagingResponse()
     resp.message(reply_text)
     return str(resp)
-
-# NOTE: We intentionally omit `app.run()` here to let gunicorn handle it via the Procfile
