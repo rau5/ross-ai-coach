@@ -7,17 +7,12 @@ from twilio.twiml.messaging_response import MessagingResponse
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Create Flask app
-logging.info("✅ Creating Flask app...")
+# Initialize Flask
+print("✅ Creating Flask app...")
 app = Flask(__name__)
-logging.info("✅ Flask app instance created")
+print("✅ Flask app instance created")
 
-# Define health check route
-@app.route("/", methods=["GET"])
-def home():
-    return "AI Coach is running!", 200
-
-# Load environment variable safely
+# Load environment variables safely
 try:
     openai.api_key = os.getenv("OPENAI_API_KEY")
     if not openai.api_key:
@@ -26,10 +21,17 @@ except Exception as e:
     logging.error(f"❌ OpenAI key error: {e}")
     raise
 
+# Root route for Railway health check
+@app.route("/", methods=["GET"])
+def index():
+    return "AI Coach is running!"
+
+# Webhook for WhatsApp messages
 @app.route("/webhook", methods=["POST"])
 def webhook():
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
+
     logging.info(f"📩 Message from {sender}: {incoming_msg}")
 
     try:
@@ -41,11 +43,15 @@ def webhook():
             ]
         )
         reply_text = response["choices"][0]["message"]["content"].strip()
-        logging.info(f"💬 Reply: {reply_text}")
+        logging.info(f"✅ Reply: {reply_text}")
     except Exception as e:
         logging.error(f"❌ OpenAI error: {e}")
-        reply_text = "Sorry Ross, I'm taking a nap 😴 Try again soon!"
+        reply_text = "Sorry Ross, I’m taking a nap 😴 Try again soon!"
 
     resp = MessagingResponse()
     resp.message(reply_text)
     return str(resp)
+
+# Optional: for local dev only
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
